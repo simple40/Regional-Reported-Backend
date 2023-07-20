@@ -4,4 +4,5 @@ exports.constants = {
     FORBIDDEN: 403,
     NOT_FOUND: 404,
     SERVER_ERROR: 500,
+    TIME_FRAME: (7*21*60*60*1000),
   };
