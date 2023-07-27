@@ -1,5 +1,6 @@
 const express = require("express");
 const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData } = require("../controllers/newsController");
+const validateToken = require("../middlewares/validateTokenHandler");
 const router = express.Router();
 const path = require('path');
 const multer = require('multer');
@@ -31,11 +32,13 @@ router.get("/" ,(req,res)=>{
     res.send("Hello World");
 });
 
-router.post("/create",upload.single('image'),createNewsArticle);
+router.post("/create",validateToken,upload.single('image'),createNewsArticle);
+router.post("/upload",validateToken,upload.single('image'),uploadImage);
+router.post("/modify/:id",validateToken, upload.single('image'), modifyNewsArticle);
+router.delete("/delete/:slug",validateToken, deleteNewsArticle);
+
+
 router.get("/get/:slug",getNewsArticle);
-router.post("/upload",upload.single('image'),uploadImage);
-router.post("/modify/:id", upload.single('image'), modifyNewsArticle);
-router.delete("/delete/:slug", deleteNewsArticle);
 router.get("/get-All", getAllNewsArticle);
 router.get("/get-News-By-Category/:category",getNewsArticlesByCategory);
 router.get("/get-Trending-News",getTrendingNewsArticles);
