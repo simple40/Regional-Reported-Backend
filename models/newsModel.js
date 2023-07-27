@@ -13,15 +13,19 @@ const newsSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    imageData: {
-        data: {
-            type: Buffer, // Binary image data
-            required: true
-        },
-        contentType: {
-            type: String, // MIME type of the image
-            required: true
-        }
+    // imageData: {
+    //     data: {
+    //         type: Buffer, // Binary image data
+    //         required: true
+    //     },
+    //     contentType: {
+    //         type: String, // MIME type of the image
+    //         required: true
+    //     }
+    // },
+    imageUrl :{
+        type: String,
+        required: true
     },
     category: {
         type: String,

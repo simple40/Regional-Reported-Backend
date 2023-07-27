@@ -4,6 +4,11 @@ const slugify = require("slugify");
 const fs = require('fs');
 const sharp = require('sharp');
 const { constants } = require("../constants");
+const youtube = require("../config/ytApiConnection");
+//const youtube = require('youtube');
+
+
+const channelId ="@Fireship";
 
 const createNewsArticle = asyncHandler(async (req, res) => {
   console.log(req.body);
@@ -14,27 +19,35 @@ const createNewsArticle = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("All fields are mandatory!");
   }
-
+  const imageUrl = req.imageUrl;
   const slug = slugify(title, { lower: true, strict: true });
   const imageData = fs.readFileSync(imageFile.path);
   const bufferImageData = Buffer.from(imageData);
 
 
+  // const newsArticle = await News.create({
+  //   title,
+  //   content,
+  //   slug,
+  //   imageData: {
+  //     data: bufferImageData,
+  //     contentType: 'image/jpeg'
+  //   },
+  //   category
+  // });
+
+  // fs.unlink(imageFile.path, (err) => {
+  //   if (err) {
+  //     console.error('Error deleting image file:', err);
+  //   }
+  // });
+
   const newsArticle = await News.create({
     title,
     content,
     slug,
-    imageData: {
-      data: bufferImageData,
-      contentType: 'image/jpeg'
-    },
+    imageUrl,
     category
-  });
-
-  fs.unlink(imageFile.path, (err) => {
-    if (err) {
-      console.error('Error deleting image file:', err);
-    }
   });
 
   if (newsArticle) {
@@ -54,39 +67,43 @@ const getNewsArticle = asyncHandler(async (req, res) => {
     { $inc: { views: 1 } },
     { new: true }
   );
-  const imageData = newsArticle.imageData.data;
-  const base64String = imageData.toString('base64');
+  //const imageData = newsArticle.imageData.data;
+  //const base64String = imageData.toString('base64');
 
-  res.status(200).json({ news: newsArticle, base64String: base64String });
+  //res.status(200).json({ news: newsArticle, base64String: base64String });
+  res.status(200).json(newsArticle)
 });
 
 const uploadImage = asyncHandler(async (req, res) => {
-  const file = req.file;
-  const data = req.body;
-  const { title, content } = data;
-  const fileName = file.originalname;
-  const imageData = fs.readFileSync(file.path);
-  const bufferImageData = Buffer.from(imageData);
-  const uint8Array = new Uint8Array(imageData); // Create Uint8Array from the array of integers
-  const bufferData = Buffer.from(uint8Array);
+  const imageUrl = req.imageUrl;
+  const imageFile = req.file;
+  res.json(imageFile);
+  // const file = req.file;
+  // const data = req.body;
+  // const { title, content } = data;
+  // const fileName = file.originalname;
+  // const imageData = fs.readFileSync(file.path);
+  // const bufferImageData = Buffer.from(imageData);
+  // const uint8Array = new Uint8Array(imageData); // Create Uint8Array from the array of integers
+  // const bufferData = Buffer.from(uint8Array);
 
-  //     sharp(bufferImageData)
-  //   .toFile('uploads/image.jpg', (error, info) => {
-  //     if (error) {
-  //       console.error('Error converting image:', error);
-  //     } else {
-  //       console.log('Image converted successfully');
-  //     }
-  //   });
-  //const processedImageBase64 = await sharp(bufferData).resize(300, 200).toFormat('jpeg').toBase64();
-  const base64String = imageData.toString('base64');
+  // //     sharp(bufferImageData)
+  // //   .toFile('uploads/image.jpg', (error, info) => {
+  // //     if (error) {
+  // //       console.error('Error converting image:', error);
+  // //     } else {
+  // //       console.log('Image converted successfully');
+  // //     }
+  // //   });
+  // //const processedImageBase64 = await sharp(bufferData).resize(300, 200).toFormat('jpeg').toBase64();
+  // const base64String = imageData.toString('base64');
 
-  fs.unlink(file.path, (err) => {
-    if (err) {
-      console.error('Error deleting image file:', err);
-    }
-  });
-  res.status(201).json({ base64String });
+  // fs.unlink(file.path, (err) => {
+  //   if (err) {
+  //     console.error('Error deleting image file:', err);
+  //   }
+  // });
+  // res.status(201).json({ base64String });
 })
 
 const modifyNewsArticle = asyncHandler(async (req, res) => {
@@ -266,6 +283,68 @@ const search = asyncHandler(async (req, res) => {
 
 });
 
+const ytVideosData = asyncHandler(async(req,res)=>{
+  // const videos = youtube.videos.list({
+  //   part: 'snippet,statistics',
+  //   channelId: channelId,
+  //   maxResults: 5,
+  // });
+
+  // const channelId2 =await youtube.channels.list({
+  //   part: 'snippet,id',
+  //   q: 'Google',
+  //   forUsername: 'Google',
+
+  // });
+  // //const channel = channelId2.data.id;
+ 
+  // res.json(channelId2.items[0].id);
+  const channelId = "UCeH4vLgigCddC0ObtQ4nmyQ"; // Replace with your actual channel ID
+  const maxResults = 3; // Number of videos to fetch
+
+  const params = {
+    part: "snippet",
+    channelId: channelId,
+    order: "viewCount",
+    maxResults: maxResults,
+  };
+
+  youtube.search.list(params, (err, response) => {
+    if (err) {
+      console.error("Error fetching videos:", err);
+      return res.status(500).json({ error: "Error fetching videos" });
+    } else {
+      const videos = response.data.items;
+      const videoList = videos.map((video) => ({
+        videoId: video.id.videoId,
+        title: video.snippet.title,
+        thumbnail: video.snippet.thumbnails.default.url,
+      }));
+      return res.status(200).json(videoList);
+    }
+  });
+
+  // const videoId = "3VHCxuxtuL8";
+  // try {
+  //   const response = await youtube.videos.list({
+  //     part: "snippet",
+  //     id: videoId,
+  //   });
+
+  //   if (response.data.items.length === 0) {
+  //     res.status(404).json({ error: "Video not found" });
+  //     return;
+  //   }
+
+  //   const videoData = response.data.items[0].snippet;
+  //   res.status(200).json({ video: videoData });
+  // } catch (error) {
+  //   console.error("Error fetching video:", error.message);
+  //   res.status(500).json({ error: "Error fetching video" });
+  // }
+  
+});
 
 
-module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search };
+
+module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData };
