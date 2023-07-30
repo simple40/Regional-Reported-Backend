@@ -18,13 +18,14 @@ const loginAdmin = asyncHandler(async (req,res) =>{
       const accessToken = jwt.sign(
         {
           admin: {
-            username: admin.username
+            username: admin.username,
           },
         },
         process.env.ACCESS_TOKEN_SECERT,
-        { expiresIn: "15m" }
+        { expiresIn: 3600  }
       );
       console.log("jwt sent");
+      res.cookie('jwtToken', accessToken, { httpOnly: true, maxAge: 36000000 }); // Max age in milliseconds
       res.status(200).json({ accessToken });
     } else {
       res.status(401);
@@ -32,4 +33,8 @@ const loginAdmin = asyncHandler(async (req,res) =>{
     }
   });
 
-  module.exports = {loginAdmin};
+  const validateUser = asyncHandler(async(req,res)=>{
+    res.status(200).json("user validation successfull");
+  });
+
+  module.exports = {loginAdmin,validateUser};
