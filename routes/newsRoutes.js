@@ -32,12 +32,13 @@ router.get("/" ,(req,res)=>{
     res.send("Hello World");
 });
 
+//routes for only admins
 router.post("/create",validateToken,upload.single('image'),createNewsArticle);
 router.post("/upload",validateToken,upload.single('image'),uploadImage);
 router.post("/modify/:id",validateToken, upload.single('image'), modifyNewsArticle);
 router.delete("/delete/:slug",validateToken, deleteNewsArticle);
 
-
+//routes for end users
 router.get("/get/:slug",getNewsArticle);
 router.get("/get-All", getAllNewsArticle);
 router.get("/get-News-By-Category/:category",getNewsArticlesByCategory);
@@ -45,5 +46,9 @@ router.get("/get-Trending-News",getTrendingNewsArticles);
 router.get("/getNews",getNewsArticles);
 router.get("/search",search);
 router.get("/yt",ytVideosData);
+router.get("/test-auth",validateToken,(req,res)=>{
+  console.log("Authorized");
+  res.status(200).json("Authorized");
+})
 
 module.exports=router;

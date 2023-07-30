@@ -7,7 +7,11 @@ const errorHandler = require("./middlewares/errorHandler");
 const port = process.env.PORT || 5000;
 connectDb();
 const app = express();
-app.use(cors());
+const corsOptions = {
+    origin: 'http://localhost:3001', // Replace this with your actual frontend URL
+    credentials: true,
+  };
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
