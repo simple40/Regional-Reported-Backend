@@ -1,9 +1,10 @@
 const express = require("express");
-const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData } = require("../controllers/newsController");
+const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData, getPopularNews, getHeadlines, insertOrUpdateHeadline } = require("../controllers/newsController");
 const validateToken = require("../middlewares/validateTokenHandler");
 const router = express.Router();
 const path = require('path');
 const multer = require('multer');
+const sharp = require('sharp');
 
 //const imageStoragePath = path.join(__dirname, 'imageUploads');
 const storage = multer.diskStorage({
@@ -13,7 +14,7 @@ const storage = multer.diskStorage({
 
       cb(null, absolutePath);
     },
-    filename: (req, file, cb) => {
+    filename: async (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         const filename = file.originalname + '-' + uniqueSuffix + ext;
@@ -34,18 +35,21 @@ router.get("/" ,(req,res)=>{
 
 //routes for only admins
 router.post("/create",validateToken,upload.single('image'),createNewsArticle);
-router.post("/upload",validateToken,upload.single('image'),uploadImage);
+router.post("/upload",upload.single('image'),uploadImage);
 router.post("/modify/:id",validateToken, upload.single('image'), modifyNewsArticle);
 router.delete("/delete/:slug",validateToken, deleteNewsArticle);
+router.post("/insertHeadlines",insertOrUpdateHeadline);
 
 //routes for end users
 router.get("/get/:slug",getNewsArticle);
 router.get("/get-All", getAllNewsArticle);
 router.get("/get-News-By-Category/:category",getNewsArticlesByCategory);
 router.get("/get-Trending-News",getTrendingNewsArticles);
+router.get("/get-pupular-news",getPopularNews);
 router.get("/getNews",getNewsArticles);
 router.get("/search",search);
 router.get("/yt",ytVideosData);
+router.get("/headlines",getHeadlines)
 router.get("/test-auth",validateToken,(req,res)=>{
   console.log("Authorized");
   res.status(200).json("Authorized");
