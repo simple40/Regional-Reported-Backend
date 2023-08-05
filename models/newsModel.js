@@ -34,7 +34,11 @@ const newsSchema = mongoose.Schema({
     views: {
         type: Number,
         default: 0 // Initial value for views is set to 0
-    }
+    },
+    isHeadline: {
+        type: Boolean,
+        default: false, // By default, the news article is not a headline
+      },
 },
     {
         timestamps: true, // Enable timestamps for automatic createdAt and updatedAt fields
