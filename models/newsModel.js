@@ -39,6 +39,9 @@ const newsSchema = mongoose.Schema({
         type: Boolean,
         default: false, // By default, the news article is not a headline
       },
+    ytVideoId:{
+        type: String,
+    },
 },
     {
         timestamps: true, // Enable timestamps for automatic createdAt and updatedAt fields

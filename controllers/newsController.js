@@ -15,7 +15,7 @@ const createNewsArticle = asyncHandler(async (req, res) => {
   //console.log(req.body);
   const imageFile = req.file;
   const newsData = req.body;
-  const { title, content, category } = newsData;
+  const { title, content, category, ytVideoId } = newsData;
   if (!title, !content, !category, !imageFile) {
     res.status(400);
     throw new Error("All fields are mandatory!");
@@ -34,7 +34,8 @@ const createNewsArticle = asyncHandler(async (req, res) => {
     content,
     slug,
     imageUrl,
-    category
+    category,
+    ytVideoId
   });
 
   if (newsArticle) {
@@ -73,7 +74,7 @@ const uploadImage = asyncHandler(async (req, res) => {
 
 const modifyNewsArticle = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, content, category } = req.body;
+  const { title, content, category, ytVideoId } = req.body;
   const imageFile = req.file;
   const modifiedData = {};
   const newsArticle = await News.findById(id);
@@ -101,6 +102,9 @@ const modifyNewsArticle = asyncHandler(async (req, res) => {
     const oldImagePath = path.join('D:/Node/MyImages', oldImageName);
     fs.unlinkSync(oldImagePath);
     modifiedData.imageUrl = req.imageUrl;
+  }
+  if(ytVideoId){
+    modifiedData.ytVideoId = ytVideoId;
   }
   const modifiedNewsArticle = await News.findByIdAndUpdate(
     id,
@@ -309,7 +313,17 @@ const getHeadlines = asyncHandler(async (req, res) => {
   }
   const slugs = headlines.map((headline) => headline.slug);
   const news = await News.find({ slug: { $in: slugs } });
-  res.status(200).json(news);
+  const orderedNews = slugs.map((slug) => news.find((article) => article.slug === slug));
+  res.status(200).json(orderedNews);
+});
+
+const getHeadlinesSlug = asyncHandler(async(req,res)=>{
+  const headlines = await Headline.find({},'slug');
+  if(!headlines){
+    throw new Error("No headlines found");
+  }
+  const slugs = headlines.map((headline)=>headline.slug);
+  res.status(200).json(slugs);
 });
 
 const compressImage = asyncHandler(async (imagePath) => {
@@ -329,4 +343,4 @@ const compressImage = asyncHandler(async (imagePath) => {
 
 
 
-module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getPopularNews, getNewsArticles, search, ytVideosData, insertOrUpdateHeadline, getHeadlines };
+module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getPopularNews, getNewsArticles, search, ytVideosData, insertOrUpdateHeadline, getHeadlines, getHeadlinesSlug };

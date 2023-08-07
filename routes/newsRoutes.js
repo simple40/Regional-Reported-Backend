@@ -1,5 +1,5 @@
 const express = require("express");
-const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData, getPopularNews, getHeadlines, insertOrUpdateHeadline } = require("../controllers/newsController");
+const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData, getPopularNews, getHeadlines, insertOrUpdateHeadline, getHeadlinesSlug } = require("../controllers/newsController");
 const validateToken = require("../middlewares/validateTokenHandler");
 const router = express.Router();
 const path = require('path');
@@ -50,6 +50,7 @@ router.get("/getNews",getNewsArticles);
 router.get("/search",search);
 router.get("/yt",ytVideosData);
 router.get("/headlines",getHeadlines)
+router.get("/headlines-slugs",getHeadlinesSlug);
 router.get("/test-auth",validateToken,(req,res)=>{
   console.log("Authorized");
   res.status(200).json("Authorized");
