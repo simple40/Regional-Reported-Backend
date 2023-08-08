@@ -42,6 +42,9 @@ const newsSchema = mongoose.Schema({
     ytVideoId:{
         type: String,
     },
+    authorDetails:{
+        type: String,
+    }
 },
     {
         timestamps: true, // Enable timestamps for automatic createdAt and updatedAt fields

@@ -15,7 +15,7 @@ const createNewsArticle = asyncHandler(async (req, res) => {
   //console.log(req.body);
   const imageFile = req.file;
   const newsData = req.body;
-  const { title, content, category, ytVideoId } = newsData;
+  const { title, content, category, ytVideoId, authorDetails} = newsData;
   if (!title, !content, !category, !imageFile) {
     res.status(400);
     throw new Error("All fields are mandatory!");
@@ -35,7 +35,8 @@ const createNewsArticle = asyncHandler(async (req, res) => {
     slug,
     imageUrl,
     category,
-    ytVideoId
+    ytVideoId,
+    authorDetails
   });
 
   if (newsArticle) {
@@ -74,7 +75,7 @@ const uploadImage = asyncHandler(async (req, res) => {
 
 const modifyNewsArticle = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, content, category, ytVideoId } = req.body;
+  const { title, content, category, ytVideoId, authorDetails} = req.body;
   const imageFile = req.file;
   const modifiedData = {};
   const newsArticle = await News.findById(id);
@@ -105,6 +106,9 @@ const modifyNewsArticle = asyncHandler(async (req, res) => {
   }
   if(ytVideoId){
     modifiedData.ytVideoId = ytVideoId;
+  }
+  if(authorDetails){
+    modifiedData.authorDetails = authorDetails;
   }
   const modifiedNewsArticle = await News.findByIdAndUpdate(
     id,
@@ -324,6 +328,10 @@ const getHeadlinesSlug = asyncHandler(async(req,res)=>{
   }
   const slugs = headlines.map((headline)=>headline.slug);
   res.status(200).json(slugs);
+});
+
+const getRelatedNews = asyncHandler(async() =>{
+
 });
 
 const compressImage = asyncHandler(async (imagePath) => {
