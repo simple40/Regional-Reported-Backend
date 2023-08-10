@@ -9,6 +9,7 @@ const { constants } = require("../constants");
 const youtube = require("../config/ytApiConnection");
 const Headline = require("../models/headlineModel");
 const YoutubeData = require('../models/youtubeData.');
+const Carousel = require("../models/carouselModel");
 
 
 const createNewsArticle = asyncHandler(async (req, res) => {
@@ -330,8 +331,62 @@ const getHeadlinesSlug = asyncHandler(async(req,res)=>{
   res.status(200).json(slugs);
 });
 
-const getRelatedNews = asyncHandler(async() =>{
+const insertOrUpdateCarousel = asyncHandler(async (req, res) => {
+  const { slugs } = req.body;
 
+  try {
+    await Carousel.deleteMany({});
+    const maxCarousel = 3;
+    const CarouselDocs = slugs.slice(0, maxCarousel).map((slug) => ({ slug }));
+    await Carousel.insertMany(CarouselDocs);
+    res.json({ message: 'Carousel inserted/updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+const getCarousel = asyncHandler(async (req, res) => {
+  const carousel = await Carousel.find({}, 'slug');
+
+  if (!carousel) {
+    throw new Error("No Carousel found");
+    res.status(404).json("No headlines found");
+  }
+  const slugs = carousel.map((carousel) => carousel.slug);
+  const news = await News.find({ slug: { $in: slugs } });
+  const orderedNews = slugs.map((slug) => news.find((article) => article.slug === slug));
+  res.status(200).json(orderedNews);
+});
+
+const getCarouselSlug = asyncHandler(async(req,res)=>{
+  const carousel = await Carousel.find({},'slug');
+  if(!carousel){
+    throw new Error("No carousel found");
+  }
+  const slugs = carousel.map((carousel)=>carousel.slug);
+  res.status(200).json(slugs);
+});
+
+const getRelatedNews = asyncHandler(async(req, res) =>{
+  const currentArticleSlug = req.params.slug;
+  const currentArticle = await News.findOne({slug : currentArticleSlug});
+  console.log(currentArticle);
+  const fiveDaysAgo = new Date();
+  fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+
+  const recentRandomNews = await News.aggregate([
+    {$match : {createdAt : {$gte : fiveDaysAgo}, _id: {$ne : currentArticle._id},category: {$nin: [currentArticle.category]}} },
+    {$sample: {size : 2}}
+  ]);
+  console.log(recentRandomNews);
+  const categoryRandomNews = await News.aggregate([
+    {$match:{category: currentArticle.category, _id: {$ne : currentArticle._id}}},
+    {$sample:{size : 2}}
+  ]);
+  console.log(categoryRandomNews);
+  const relatedNews = [...recentRandomNews, ...categoryRandomNews];
+  res.status(200).json(relatedNews);
 });
 
 const compressImage = asyncHandler(async (imagePath) => {
@@ -351,4 +406,4 @@ const compressImage = asyncHandler(async (imagePath) => {
 
 
 
-module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getPopularNews, getNewsArticles, search, ytVideosData, insertOrUpdateHeadline, getHeadlines, getHeadlinesSlug };
+module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getPopularNews, getNewsArticles, search, ytVideosData, insertOrUpdateHeadline, getHeadlines, getHeadlinesSlug, insertOrUpdateCarousel, getCarousel, getCarouselSlug ,getRelatedNews };
