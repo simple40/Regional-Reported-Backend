@@ -125,12 +125,21 @@ const deleteNewsArticle = asyncHandler(async (req, res) => {
   const newsData = await News.findOne({ slug });
   const imageUrl = newsData.imageUrl;
   const deletedNewsArticle = await News.findOneAndDelete({ slug });
+  const deletedHeadline = await Headline.findOneAndDelete({slug});
+  const deleteCarousel = await Carousel.findOneAndDelete({slug});
   if (!deletedNewsArticle) {
     return res.status(404).json({ message: 'News article not found' });
   }
   const imageName = imageUrl.replace('http://localhost:8085/', '');
-  const imagePath = path.join('D:/Node/MyImages', imageName);
-  fs.unlinkSync(imagePath);
+  
+  try{
+    const imagePath = path.join('D:/Node/MyImages', imageName);
+    console.log(imagePath);
+    fs.unlinkSync(imagePath);
+  }
+  catch(error){
+    console.log(error);
+  }
   res.status(200).json({ message: 'News article deleted successfully' });
 });
 
