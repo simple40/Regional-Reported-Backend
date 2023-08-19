@@ -1,5 +1,5 @@
 const express = require("express");
-const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData, getPopularNews, getHeadlines, insertOrUpdateHeadline, getHeadlinesSlug, getRelatedNews, insertOrUpdateCarousel, getCarousel, getCarouselSlug } = require("../controllers/newsController");
+const { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, getAllNewsArticle, deleteNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getNewsArticles, search, ytVideosData, getPopularNews, getHeadlines, insertOrUpdateHeadline, getHeadlinesSlug, getRelatedNews, insertOrUpdateCarousel, getCarousel, getCarouselSlug, feedBack } = require("../controllers/newsController");
 const validateToken = require("../middlewares/validateTokenHandler");
 const router = express.Router();
 const path = require('path');
@@ -56,6 +56,7 @@ router.get("/headlines-slugs",getHeadlinesSlug);
 router.get("/carousel",getCarousel)
 router.get("/carousel-slugs",getCarouselSlug);
 router.get("/related-news/:slug",getRelatedNews);
+router.post("/feedback",feedBack);
 router.get("/test-auth",validateToken,(req,res)=>{
   console.log("Authorized");
   res.status(200).json("Authorized");

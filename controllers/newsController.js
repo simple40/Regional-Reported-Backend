@@ -10,6 +10,8 @@ const youtube = require("../config/ytApiConnection");
 const Headline = require("../models/headlineModel");
 const YoutubeData = require('../models/youtubeData.');
 const Carousel = require("../models/carouselModel");
+const Feedback = require("../models/feedbackModel");
+const transporter = require("../config/emailConfig");
 
 
 const createNewsArticle = asyncHandler(async (req, res) => {
@@ -76,6 +78,7 @@ const uploadImage = asyncHandler(async (req, res) => {
 
 const modifyNewsArticle = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
   const { title, content, category, ytVideoId, authorDetails} = req.body;
   const imageFile = req.file;
   const modifiedData = {};
@@ -84,12 +87,23 @@ const modifyNewsArticle = asyncHandler(async (req, res) => {
     res.status(404).json({ message: "News Article not found!" });
     return;
   }
+   const slug = newsArticle.slug;
   if (title) {
     modifiedData.title = title;
     modifiedData.slug = transliteration.slugify(title, {
       lowercase: true,
       separator: '-',
     });
+    const headline = await Headline.findOne({slug})
+    const carousel =await Carousel.findOne({slug})
+    if(headline){
+      const head =await Headline.findOneAndUpdate({slug},{slug : modifiedData.slug},{new : true});
+      console.log(head.slug);
+    }
+    if(carousel){
+      const car = await Carousel.findOneAndUpdate({slug},{slug : modifiedData.slug},{new : true});
+      console.log(car.slug);
+    }  
   }
   if (content) {
     modifiedData.content = content;
@@ -398,10 +412,59 @@ const getRelatedNews = asyncHandler(async(req, res) =>{
   res.status(200).json(relatedNews);
 });
 
+const feedBack = asyncHandler(async(req, res)=>{
+  console.log(process.env.Gmail);
+  console.log(process.env.AdminGmail);
+  console.log(process.env.password);
+  const {email,message} = req.body;
+  if(!email, !message){
+    res.status(400);
+    throw new Error("All fields are mandatory!");
+  }
+  const feedBack = await Feedback.create({
+    email,
+    message
+  });
+  if (feedBack) {
+    const mailOptions = {
+      from: process.env.Gmail,
+      to: process.env.AdminGmail, // Admin's email address
+      subject: 'New Feedback Received',
+      text: `New feedback received from ${email}: ${message}`,
+    };
+    
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+    
+    res.status(201).json({ feedBack });
+    
+  }
+  else {
+    console.error('Error submitting form:', error);
+    res.status(500).send('An error occurred while submitting the form.');
+  }
+})
+
 const compressImage = asyncHandler(async (imagePath) => {
   try {
     console.log(imagePath);
-    const compressedImage = await sharp(imagePath).resize({width : 1200, fit: 'inside'}).jpeg({ quality: 50 }).toBuffer();
+    const { width: originalWidth, height: originalHeight } = await sharp(imagePath).metadata();
+    // Set a threshold size for compression (e.g., 800 pixels)
+    const minSizeForCompression = 1200;
+    // Check if either width or height is smaller than the threshold
+    if (originalWidth < minSizeForCompression || originalHeight < minSizeForCompression) {
+      console.log("Image is too small for resize");
+      const compressedImage = await sharp(imagePath).jpeg({ quality: 70 }).toBuffer();
+      fs.writeFileSync(imagePath, compressedImage);
+      console.log('compression successfull');
+      return ("successfully compressed");
+    }
+    const compressedImage = await sharp(imagePath).resize({width : 1200, fit: 'inside'}).jpeg({ quality: 70 }).toBuffer();
     // Overwrite the original file with the compressed version
     fs.writeFileSync(imagePath, compressedImage);
     console.log("compression successfull");
@@ -415,4 +478,4 @@ const compressImage = asyncHandler(async (imagePath) => {
 
 
 
-module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getPopularNews, getNewsArticles, search, ytVideosData, insertOrUpdateHeadline, getHeadlines, getHeadlinesSlug, insertOrUpdateCarousel, getCarousel, getCarouselSlug ,getRelatedNews };
+module.exports = { createNewsArticle, getNewsArticle, uploadImage, modifyNewsArticle, deleteNewsArticle, getAllNewsArticle, getNewsArticlesByCategory, getTrendingNewsArticles, getPopularNews, getNewsArticles, search, ytVideosData, insertOrUpdateHeadline, getHeadlines, getHeadlinesSlug, insertOrUpdateCarousel, getCarousel, getCarouselSlug ,getRelatedNews, feedBack };
